@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd 
+import tensorflow as tf
 from sklearn.preprocessing import MinMaxScaler
 from keras.models import Sequential
 from keras.layers import LSTM
@@ -26,8 +27,8 @@ X_train, y_train = np.array(X_train), np.array(y_train)
 
 X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], 1))
 
-units = 100
-drop = .1
+units = 128
+drop = .2
 
 model = Sequential()
 
@@ -48,9 +49,10 @@ model.add(Dense(units=1))
 model.compile(optimizer='adam',loss='mean_squared_error')
 
 model.fit(X_train,y_train,epochs=100,batch_size=32)
+model.save('model1')
 
-url = 'https://raw.githubusercontent.com/mwitiderrick/stockprice/master/tatatest.csv'
-dataset_test = pd.read_csv(url)
+dataset_test = pd.read_csv('GOOGL-YTD.csv')
+
 real_stock_price = dataset_test.iloc[:, 1:2].values
 
 dataset_total = pd.concat((dataset_train['Open'], dataset_test['Open']), axis = 0)
@@ -58,17 +60,18 @@ inputs = dataset_total[len(dataset_total) - len(dataset_test) - 60:].values
 inputs = inputs.reshape(-1,1)
 inputs = sc.transform(inputs)
 X_test = []
-for i in range(60, 76):
+print(inputs.shape)
+for i in range(60, inputs.shape[0]):
     X_test.append(inputs[i-60:i, 0])
 X_test = np.array(X_test)
 X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 1))
 predicted_stock_price = model.predict(X_test)
 predicted_stock_price = sc.inverse_transform(predicted_stock_price)
 
-plt.plot(real_stock_price, color = 'black', label = 'TATA Stock Price')
-plt.plot(predicted_stock_price, color = 'green', label = 'Predicted TATA Stock Price')
-plt.title('TATA Stock Price Prediction')
-plt.xlabel('Time')
-plt.ylabel('TATA Stock Price')
+plt.plot(real_stock_price, color = 'black', label = 'GOOGL Stock Price')
+plt.plot(predicted_stock_price, color = 'red', label = 'Predicted GOOGL Stock Price')
+plt.title('GOOGL YTD Stock Price Prediction')
+plt.xlabel('Days Since 1/1/23')
+plt.ylabel('GOOGL Stock Price')
 plt.legend()
-plt.show()
+plt.savefig('Google YTD price prediction trained from AAPL')
