@@ -1,3 +1,4 @@
+import yfinance as yf
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd 
@@ -8,11 +9,27 @@ from keras.layers import LSTM
 from keras.layers import Dropout
 from keras.layers import Dense 
 
-dataset_train = pd.read_csv('AAPL.csv')
+#dataset_train = pd.read_csv('AAPL.csv')
+
+#print(dataset_train)
+
+traingTicker = 'AAPL'
+testingTicker = 'GOOGL'
+
+def getData(ticker, period):
+    tickers = yf.Tickers(ticker)
+    data = tickers.tickers[ticker].history(period=period)
+    data.reset_index(inplace=True)
+    data['Date'] = data['Date'].dt.strftime('%Y-%m-%d')
+    data.drop(['Dividends','Stock Splits'], inplace=True, axis=1)
+    data.to_dict(orient='records')
+    return data
+    
+
+dataset_train = getData('AAPL', '10y')
 training_set = dataset_train.iloc[:, 1:2].values
 
 print(dataset_train)
-
 
 sc = MinMaxScaler(feature_range=(0,1))
 training_set_scaled = sc.fit_transform(training_set)
@@ -48,10 +65,13 @@ model.add(Dense(units=1))
 
 model.compile(optimizer='adam',loss='mean_squared_error')
 
-model.fit(X_train,y_train,epochs=100,batch_size=32)
+
+
+history = model.fit(X_train,y_train,epochs=100,batch_size=None)
 model.save('model1')
 
-dataset_test = pd.read_csv('GOOGL-YTD.csv')
+
+dataset_test = getData('GOOGL', 'YTD')
 
 real_stock_price = dataset_test.iloc[:, 1:2].values
 
@@ -68,6 +88,7 @@ X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 1))
 predicted_stock_price = model.predict(X_test)
 predicted_stock_price = sc.inverse_transform(predicted_stock_price)
 
+plt.figure(1)
 plt.plot(real_stock_price, color = 'black', label = 'GOOGL Stock Price')
 plt.plot(predicted_stock_price, color = 'red', label = 'Predicted GOOGL Stock Price')
 plt.title('GOOGL YTD Stock Price Prediction')
@@ -75,3 +96,11 @@ plt.xlabel('Days Since 1/1/23')
 plt.ylabel('GOOGL Stock Price')
 plt.legend()
 plt.savefig('Google YTD price prediction trained from AAPL')
+plt.figure(2)
+plt.plot(history.history['loss'])
+plt.title('model loss')
+plt.ylabel('loss')
+plt.xlabel('epoch')
+plt.yscale('log')
+plt.legend(['train'], loc='upper right')
+plt.savefig('model1Loss')
