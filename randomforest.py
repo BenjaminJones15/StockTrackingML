@@ -92,6 +92,3 @@ plt.title("Random Forest Regression - Mean Squared Error: " + str(round(mse, 2))
 # add legend and show the plot
 plt.legend()
 plt.show()
-
-plt.plot(y_test, y_pred)
-plt.show()
