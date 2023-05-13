@@ -25,10 +25,14 @@ from sklearn.model_selection import GridSearchCV
 
 data = pd.read_csv('AAPL.csv')
 
-
-
 # convert date column to datetime format
 data['Date'] = pd.to_datetime(data['Date'])
+
+start_date = pd.to_datetime('2023-01-01')
+end_date = pd.to_datetime('2023-04-28')
+
+# Filter the DataFrame based on the date range
+data = data[(data['Date'] >= start_date) & (data['Date'] <= end_date)]
 
 # extract year and month information and store in separate columns
 data['Year'] = data['Date'].dt.year
@@ -51,7 +55,7 @@ print(X_train)
 print(X_test)
 
 param_grid = {
-    'n_estimators': [50, 100, 200, 500, 1000, 10,000],
+    'n_estimators': [50, 100, 200, 500, 1000],
     'max_depth': [3, 5, 7, 10, 15, 30, 50, 100]
 }
 
@@ -81,7 +85,7 @@ plt.plot(x_ax, y_test, label="original")
 plt.plot(x_ax, y_pred, label="predicted")
 
 # set the axis labels and title
-plt.xlabel("test data points")
+plt.xlabel("Days since 01/01/2023")
 plt.ylabel("AAPL stock price")
 plt.title("Random Forest Regression - Mean Squared Error: " + str(round(mse, 2)))
 
@@ -91,4 +95,3 @@ plt.show()
 
 plt.plot(y_test, y_pred)
 plt.show()
-
